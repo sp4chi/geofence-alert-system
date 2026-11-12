@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    # The official PostGIS image is amd64-only; this lets it run (emulated) on Apple Silicon too.
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: geofence
+      POSTGRES_PASSWORD: geofence
+      POSTGRES_DB: geofence
+    ports:
+      - "${DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geofence -d geofence"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://geofence:geofence@db:5432/geofence?sslmode=disable
+      CORS_ORIGINS: http://localhost:5173
+      API_KEY: ""
+      RATE_LIMIT_RPS: "0"
+      RESTRICTED_ZONE_DEFAULT_ALERT: "true"
+    ports:
+      - "${API_HOST_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
