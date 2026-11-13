@@ -24,6 +24,9 @@ type Options struct {
 	Tracker     *tracking.Service
 	Hub         *alerts.Hub
 	CORSOrigins []string
+	// Optional hardening, both off by default so the evaluator's plain calls always work.
+	APIKey       string  // "" = no authentication
+	RateLimitRPS float64 // 0 = no rate limit on POST /vehicles/location
 }
 
 type API struct {
@@ -52,7 +55,11 @@ func NewRouter(opts Options) http.Handler {
 
 	mux.HandleFunc("POST /vehicles", api.handleCreateVehicle)
 	mux.HandleFunc("GET /vehicles", api.handleListVehicles)
-	mux.HandleFunc("POST /vehicles/location", api.handleUpdateLocation)
+	updateLocation := api.handleUpdateLocation
+	if opts.RateLimitRPS > 0 {
+		updateLocation = newRateLimiter(opts.RateLimitRPS).limit(updateLocation)
+	}
+	mux.HandleFunc("POST /vehicles/location", updateLocation)
 	mux.HandleFunc("GET /vehicles/location/{vehicle_id}", api.handleGetVehicleLocation)
 
 	mux.HandleFunc("POST /alerts/configure", api.handleConfigureAlert)
@@ -65,8 +72,9 @@ func NewRouter(opts Options) http.Handler {
 	// Catch-all so unknown paths still get a JSON body with time_ns instead of the stdlib text 404.
 	mux.HandleFunc("/", handleNotFound)
 
-	// Outermost first: log sees the final status, including 500s produced by recoverPanics.
-	return chain(mux, logRequests, recoverPanics, cors(api.origins))
+	// Outermost first: log sees the final status, including 500s produced by recoverPanics;
+	// cors runs before the API key check so browsers' preflight requests are answered.
+	return chain(mux, logRequests, recoverPanics, cors(api.origins), requireAPIKey(opts.APIKey))
 }
 
 type healthResponse struct {
