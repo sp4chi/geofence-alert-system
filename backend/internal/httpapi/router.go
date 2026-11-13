@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"geofencing/internal/alerts"
 	"geofencing/internal/store"
 	"geofencing/internal/tracking"
 )
@@ -21,6 +22,7 @@ type Options struct {
 	Health      Pinger
 	Store       *store.Store
 	Tracker     *tracking.Service
+	Hub         *alerts.Hub
 	CORSOrigins []string
 }
 
@@ -28,11 +30,19 @@ type API struct {
 	health  Pinger
 	store   *store.Store
 	tracker *tracking.Service
+	hub     *alerts.Hub
+	origins originPolicy
 }
 
 // NewRouter wires every route. Go 1.22+ patterns ("GET /path/{id}") give method matching and path params.
 func NewRouter(opts Options) http.Handler {
-	api := &API{health: opts.Health, store: opts.Store, tracker: opts.Tracker}
+	api := &API{
+		health:  opts.Health,
+		store:   opts.Store,
+		tracker: opts.Tracker,
+		hub:     opts.Hub,
+		origins: newOriginPolicy(opts.CORSOrigins),
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.handleHealth)
@@ -45,13 +55,18 @@ func NewRouter(opts Options) http.Handler {
 	mux.HandleFunc("POST /vehicles/location", api.handleUpdateLocation)
 	mux.HandleFunc("GET /vehicles/location/{vehicle_id}", api.handleGetVehicleLocation)
 
+	mux.HandleFunc("POST /alerts/configure", api.handleConfigureAlert)
+	mux.HandleFunc("GET /alerts", api.handleListAlerts)
+
 	mux.HandleFunc("GET /violations/history", api.handleViolationHistory)
+
+	mux.HandleFunc("GET /ws/alerts", api.handleAlertsSocket)
 
 	// Catch-all so unknown paths still get a JSON body with time_ns instead of the stdlib text 404.
 	mux.HandleFunc("/", handleNotFound)
 
 	// Outermost first: log sees the final status, including 500s produced by recoverPanics.
-	return chain(mux, logRequests, recoverPanics, cors(opts.CORSOrigins))
+	return chain(mux, logRequests, recoverPanics, cors(api.origins))
 }
 
 type healthResponse struct {
