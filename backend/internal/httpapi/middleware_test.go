@@ -34,7 +34,7 @@ func TestCORS(t *testing.T) {
 				req.Header.Set("Access-Control-Request-Method", "POST")
 			}
 			rec := httptest.NewRecorder()
-			cors(tt.allowed)(okHandler).ServeHTTP(rec, req)
+			cors(newOriginPolicy(tt.allowed))(okHandler).ServeHTTP(rec, req)
 
 			if got := rec.Header().Get("Access-Control-Allow-Origin"); got != tt.wantAllow {
 				t.Errorf("Allow-Origin = %q, want %q", got, tt.wantAllow)
