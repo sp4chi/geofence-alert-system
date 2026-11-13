@@ -4,17 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
 	"geofencing/internal/store"
 )
 
-const (
-	defaultHistoryLimit = 50
-	maxHistoryLimit     = 500
-)
+const defaultHistoryLimit = 50
 
 type violationJSON struct {
 	ID            string  `json:"id"`
@@ -65,14 +61,13 @@ func (a *API) handleViolationHistory(w http.ResponseWriter, r *http.Request) {
 	respond(w, http.StatusOK, start, violationHistoryResponse{Violations: out, TotalCount: total})
 }
 
-// parseHistoryFilter reads the query string. limit defaults to 50; values above 500 are clamped
-// to 500 rather than rejected (documented decision). offset is our addition for pagination.
+// parseHistoryFilter reads the query string. limit defaults to 50 (max 500, see parsePage);
+// offset is our addition for pagination.
 func parseHistoryFilter(query url.Values) (store.HistoryFilter, []string) {
 	var problems []string
 	filter := store.HistoryFilter{
 		VehicleID:  strings.TrimSpace(query.Get("vehicle_id")),
 		GeofenceID: strings.TrimSpace(query.Get("geofence_id")),
-		Limit:      defaultHistoryLimit,
 	}
 
 	parseDate := func(name string) *time.Time {
@@ -93,26 +88,9 @@ func parseHistoryFilter(query url.Values) (store.HistoryFilter, []string) {
 		problems = append(problems, "start_date must be before or equal to end_date")
 	}
 
-	if raw := query.Get("limit"); raw != "" {
-		limit, err := strconv.Atoi(raw)
-		switch {
-		case err != nil || limit < 1:
-			problems = append(problems, fmt.Sprintf("limit %q must be a positive integer (max %d)", raw, maxHistoryLimit))
-		case limit > maxHistoryLimit:
-			filter.Limit = maxHistoryLimit
-		default:
-			filter.Limit = limit
-		}
-	}
-
-	if raw := query.Get("offset"); raw != "" {
-		offset, err := strconv.Atoi(raw)
-		if err != nil || offset < 0 {
-			problems = append(problems, fmt.Sprintf("offset %q must be a non-negative integer", raw))
-		} else {
-			filter.Offset = offset
-		}
-	}
+	page, pageProblems := parsePage(query, defaultHistoryLimit)
+	problems = append(problems, pageProblems...)
+	filter.Limit, filter.Offset = page.Limit, page.Offset
 
 	return filter, problems
 }
