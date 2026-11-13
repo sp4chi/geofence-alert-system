@@ -22,8 +22,8 @@ services:
     environment:
       PORT: "8080"
       DATABASE_URL: postgres://geofence:geofence@db:5432/geofence?sslmode=disable
-      # 3000 = the web container below, 5173 = `npm run dev`
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      # The web container below (follows WEB_HOST_PORT) and `npm run dev` (5173)
+      CORS_ORIGINS: http://localhost:${WEB_HOST_PORT:-3000},http://localhost:5173
       API_KEY: ""
       RATE_LIMIT_RPS: "0"
       RESTRICTED_ZONE_DEFAULT_ALERT: "true"
