@@ -23,6 +23,22 @@ docker compose up --build
 
 Then open http://localhost:3000 (UI), with the API at http://localhost:8080. Everything else (local development, configuration, curl examples for every endpoint, the WebSocket, design decisions and deployment) is in **[SETUP.md](SETUP.md)**.
 
+## Make commands
+
+The `Makefile` wraps the common tasks; `make help` lists all of them. The ones you'll use most:
+
+| Command | What it does |
+|---|---|
+| `make up` / `make down` | Start the whole stack (db + API + UI) in the background / stop it, keeping data |
+| `make logs` | Follow the API logs |
+| `make smoke` | End-to-end check of every endpoint, the error cases and live WebSocket alerts; `make smoke API_URL=https://…` runs it against a deployment |
+| `make simulate VEHICLE=veh_…` | Drive a vehicle across a geofence (add `GEOFENCE=geo_…` to pick one) to see entry/exit alerts live |
+| `make check` | Formatting, `go vet`, Go tests with the race detector, and the frontend build |
+| `make db` + `make run` | Run only the database in Docker and the API natively (reads `.env`) |
+| `make fe-dev` | Frontend dev server on http://localhost:5173 |
+| `make psql` | Open `psql` in the database container |
+| `make reset-db CONFIRM=1` | Delete all local data and start fresh |
+
 ## Stack
 
 | Part      | Tech                                                                                 |
