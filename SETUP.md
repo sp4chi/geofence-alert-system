@@ -82,8 +82,8 @@ All configuration is environment variables; the same image runs locally and in p
 | `DATABASE_URL` | — (required) | Postgres connection string, e.g. `postgres://geofence:geofence@localhost:5432/geofence?sslmode=disable` |
 | `CORS_ORIGINS` | empty | Comma-separated browser origins allowed to call the API **and** open the WebSocket, e.g. `https://app.vercel.app`. `*` allows any. Requests without an `Origin` header (curl, scripts) are always allowed |
 | `RESTRICTED_ZONE_DEFAULT_ALERT` | `true` | Entering a `restricted_zone` raises an alert even without a configured rule |
-| `API_KEY` | empty | Reserved for optional API-key auth; empty = off |
-| `RATE_LIMIT_RPS` | `0` | Reserved for optional rate limiting; `0` = off |
+| `API_KEY` | empty (off) | When set, every endpoint except `/healthz` requires `X-API-Key: <key>` (or `Authorization: Bearer <key>`); the WebSocket also accepts `?api_key=<key>`. Missing/wrong key → 401 |
+| `RATE_LIMIT_RPS` | `0` (off) | Per-client limit on `POST /vehicles/location` in requests per second (token bucket, bursts up to 2× the rate). Over the limit → 429 with `Retry-After` |
 
 **Frontend (`frontend/`, read at build time)**
 
@@ -91,8 +91,11 @@ All configuration is environment variables; the same image runs locally and in p
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:8080` | Base URL of the API |
 | `VITE_WS_URL` | derived from `VITE_API_URL` (`http→ws`, `https→wss`) + `/ws/alerts` | WebSocket URL |
+| `VITE_API_KEY` | empty | Only when the API has `API_KEY` set; sent with every request. It is visible in the browser bundle |
 
 **Compose host ports:** `DB_HOST_PORT` (5432), `API_HOST_PORT` (8080), `WEB_HOST_PORT` (3000).
+
+**Optional hardening in Compose:** `API_KEY=demo RATE_LIMIT_RPS=5 docker compose up --build` turns on both (the UI is built with the same key).
 
 ---
 
@@ -270,6 +273,29 @@ curl -s "$API/violations/history?vehicle_id=$VEH&limit=10"
 
 Filters combine with AND: `vehicle_id`, `geofence_id`, `start_date`, `end_date` (RFC 3339, inclusive). `limit` defaults to 50; values above 500 are clamped to 500. `offset` is supported for paging; `total_count` counts all matches.
 
+### Pagination on the other lists
+
+`GET /geofences`, `GET /vehicles` and `GET /alerts` also accept optional `limit` (1–500, larger values clamped) and `offset`. Without them they return every item in exactly the README shape. With them they return that page plus `total_count`:
+
+```bash
+curl -s "$API/vehicles?limit=2&offset=0"
+# 200 {"vehicles":[{...},{...}],"total_count":15,"time_ns":"..."}
+```
+
+### Optional API key and rate limit
+
+Both are off unless configured (see [Configuration](#configuration)):
+
+```bash
+# API_KEY=demo
+curl -s $API/vehicles                          # 401 {"error":"missing or invalid API key: send it in the X-API-Key header","time_ns":"..."}
+curl -s -H 'X-API-Key: demo' $API/vehicles     # 200
+websocat "ws://localhost:8080/ws/alerts?api_key=demo"
+
+# RATE_LIMIT_RPS=2 → bursts of 4, then:
+# 429 Retry-After: 1  {"error":"rate limit exceeded: too many location updates, retry shortly","time_ns":"..."}
+```
+
 ---
 
 ## Frontend usage guide
@@ -334,6 +360,8 @@ useAlertsSocket ◀──wss /ws/alerts──  alerts hub ◀─ buffered chan �
 | `POST` create endpoints | Return **201 Created** | Standard status for creation (the brief doesn't specify) |
 | `vehicle_number` | Unique, case-insensitive | `ka-01` and `KA-01` are the same plate |
 | History `limit` | Default 50, values > 500 clamped to 500; `offset` added | Matches the brief; offset enables paging |
+| Pagination on other lists | Optional `limit`/`offset`; `total_count` only when paginating | Unpaginated responses keep exactly the README shape |
+| API key / rate limit | Off by default; limit is per client IP (first `X-Forwarded-For` entry behind a proxy) on `POST /vehicles/location` only | Evaluator calls must work unchanged; location updates are the high-volume endpoint. Without a trusted proxy the IP header is spoofable, so the limit is about fairness, not security |
 
 **Known limitations:** GPS jitter right on a boundary can flap in/out (fix: hysteresis); live delivery is in-memory, so an alert is stored but not pushed if the process dies between commit and send (fix: outbox pattern); one API instance per hub (fix: Redis/NATS pub-sub for multiple instances); no geofence update/delete endpoints (not in the brief); polygons crossing the antimeridian (±180°) are not supported.
 
