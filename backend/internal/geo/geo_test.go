@@ -33,6 +33,9 @@ func TestParsePolygon(t *testing.T) {
 		{"boundary values are allowed", [][]float64{{-90, -180}, {90, -180}, {90, 180}, {-90, -180}}, ""},
 		{"all points identical", [][]float64{{1, 1}, {1, 1}, {1, 1}, {1, 1}}, "at least 3 distinct points"},
 		{"collinear points", [][]float64{{0, 0}, {1, 1}, {2, 2}, {0, 0}}, "no area"},
+		{"collinear with repeats", [][]float64{{0, 0}, {0, 0}, {1, 1}, {3, 3}, {0, 0}}, "no area"},
+		// Zero net signed area but not a line: left for PostGIS to report as self-intersection.
+		{"bow-tie passes Go checks", [][]float64{{10, 10}, {11, 11}, {11, 10}, {10, 11}, {10, 10}}, ""},
 		{"only two distinct points", [][]float64{{0, 0}, {1, 1}, {0, 0}, {1, 1}, {0, 0}}, "at least 3 distinct points"},
 	}
 
