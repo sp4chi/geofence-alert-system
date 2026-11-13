@@ -68,7 +68,7 @@ func withDefault(value, fallback string) string {
 // Origin header. A URL pasted from the address bar ("https://app.vercel.app/geofences", a trailing
 // slash, or quotes) would otherwise never match and silently block the frontend.
 func normalizeOrigins(entries []string) []string {
-	origins := make([]string, 0, len(entries))
+	var origins []string
 	for _, entry := range entries {
 		entry = strings.Trim(entry, `"'`)
 		if u, err := url.Parse(entry); err == nil && u.Scheme != "" && u.Host != "" {
