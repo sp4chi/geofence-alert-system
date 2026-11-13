@@ -68,7 +68,7 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 6 — Ship + docs
 
-- [ ] 🟥 Deploy frontend to Vercel; deployed FE ↔ deployed BE verified
+- [x] 🟥 Deploy frontend to Vercel; deployed FE ↔ deployed BE verified — https://frontend-ivory-delta-38.vercel.app (2 tabs Live, alert toast + feed from a Render crossing)
 - [x] 🟥 `SETUP.md`: prerequisites, local setup, Docker Compose, curl examples for all 9 endpoints + WS, frontend usage, architecture summary, documented decisions (boundary, first update, restricted default)
 - [x] 🟥 `SETUP.md`: add a "Make targets" section (paste `make help` output) — required by AGENTS.md §4.1
 - [x] 🟥 Fresh-clone test: `git clone` into new folder → `docker compose up` works
@@ -129,4 +129,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Phase 5: React app (map + draw, vehicles + click-to-locate, alert rules, live feed/toasts/pill, history with URL filters + pagination); verified in headless Chrome incl. 390 px; fixed bow-tie message bug in `geo` | Frontend not deployed yet (Phase 6) |
 | Fri 13 Nov | Phase 6 (local): web container (nginx) in compose, SETUP.md + README.md, SETUP walkthrough run as written, fresh clone on custom ports passes smoke + UI; fixed CORS when WEB_HOST_PORT changes | Waiting on Render URL + Vercel import; 38+ commits not pushed |
 | Fri 13 Nov | Render deploy live: `make smoke` passes over HTTPS + WSS; latest code (bow-tie fix) confirmed; CORS allows localhost:5173 | Add Vercel URL to Render `CORS_ORIGINS` after frontend deploy |
+| Fri 13 Nov | Vercel live; CORS fixed on Render; production verified in browser (2 tabs, live alert) | CORS-normalization commits not pushed yet |
 |            |                                    |                  |
