@@ -57,7 +57,7 @@ type Result struct {
 	Alerts []alerts.Message
 }
 
-// UpdateLocation runs the whole update in one transaction (see DESIGN.md §2.1):
+// UpdateLocation runs the whole update in one transaction:
 // lock vehicle → store point → containment → diff with previous set → events → new state → commit.
 func (s *Service) UpdateLocation(ctx context.Context, u Update) (Result, error) {
 	// Postgres keeps microseconds; truncate now so comparisons with last_seen_at are exact.

@@ -1,4 +1,4 @@
--- Initial schema. See DESIGN.md §3 for the reasoning behind each table and index.
+-- Initial schema. See "Behaviour and design decisions" in SETUP.md for the reasoning behind the tables and indexes.
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE TABLE geofences (
