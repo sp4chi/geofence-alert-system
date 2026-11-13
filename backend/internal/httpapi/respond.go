@@ -58,6 +58,11 @@ func appendTimeNS(object []byte, elapsed time.Duration) []byte {
 	return append(out, '}')
 }
 
+// formatTime renders timestamps as UTC RFC 3339 with whole seconds, e.g. "2025-01-15T10:30:00Z".
+func formatTime(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
+}
+
 // isJSONObject is enough for json.Marshal output, which never has surrounding whitespace.
 func isJSONObject(encoded []byte) bool {
 	return len(encoded) >= 2 && encoded[0] == '{' && encoded[len(encoded)-1] == '}'
