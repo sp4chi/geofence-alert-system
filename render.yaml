@@ -1,0 +1,34 @@
+# Render Blueprint: the API (from the public Docker Hub image) + a managed Postgres with PostGIS.
+# Usable once the repo is on GitHub: Render dashboard → New → Blueprint → pick this repo.
+# The API enables PostGIS and creates its tables itself on first start (embedded migrations).
+services:
+  - type: web
+    name: mapup-geofencing-api
+    runtime: image
+    image:
+      url: docker.io/sp4chi/mapup-geofencing-api:latest
+    plan: free
+    region: singapore
+    healthCheckPath: /healthz
+    envVars:
+      # Render injects PORT; the API reads it.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mapup-geofencing-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        sync: false # set in the dashboard to the Vercel URL once the frontend is deployed
+      - key: RESTRICTED_ZONE_DEFAULT_ALERT
+        value: "true"
+      - key: RATE_LIMIT_RPS
+        value: "0"
+      - key: API_KEY
+        value: ""
+
+databases:
+  - name: mapup-geofencing-db
+    plan: free
+    region: singapore # must match the service so it can use the private connection string
+    postgresMajorVersion: "16"
+    databaseName: geofence
+    user: geofence
