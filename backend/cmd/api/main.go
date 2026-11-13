@@ -1,5 +1,5 @@
 // Command api is the geofencing HTTP + WebSocket server.
-// main only wires pieces together: config → db → migrations → router → server.
+// main only wires pieces together: config → db → migrations → hub → router → server.
 package main
 
 import (
@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"geofencing/internal/alerts"
 	"geofencing/internal/config"
 	"geofencing/internal/httpapi"
 	"geofencing/internal/store"
@@ -49,12 +50,18 @@ func run() error {
 	}
 	db := store.New(pool)
 
+	// The hub stops with ctx, which closes every WebSocket client during shutdown
+	// (server.Shutdown does not touch hijacked connections).
+	hub := alerts.NewHub()
+	go hub.Run(ctx)
+
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: httpapi.NewRouter(httpapi.Options{
 			Health:      db,
 			Store:       db,
-			Tracker:     tracking.New(db),
+			Tracker:     tracking.New(db, hub, cfg.RestrictedZoneDefaultAlert),
+			Hub:         hub,
 			CORSOrigins: cfg.CORSOrigins,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
