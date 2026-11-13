@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"geofencing/internal/geo"
 	"geofencing/internal/ids"
 )
@@ -59,16 +61,34 @@ func (s *Store) CreateGeofence(ctx context.Context, in NewGeofence) (Geofence, e
 	return g, nil
 }
 
-// ListGeofences returns all geofences, newest first; category "" means no filter.
-func (s *Store) ListGeofences(ctx context.Context, category string) ([]Geofence, error) {
+// ListGeofences returns geofences newest first, plus the total matching count; category "" means
+// no filter, and an empty Page means all of them.
+func (s *Store) ListGeofences(ctx context.Context, category string, page Page) ([]Geofence, int, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT id, name, description, category, ST_AsGeoJSON(boundary), status, created_at
 		FROM geofences
 		WHERE $1 = '' OR category = $1
-		ORDER BY created_at DESC, id DESC`, category)
+		ORDER BY created_at DESC, id DESC
+		LIMIT NULLIF($2, 0) OFFSET $3`, category, page.Limit, page.Offset)
 	if err != nil {
-		return nil, wrap("list geofences", err)
+		return nil, 0, wrap("list geofences", err)
 	}
+	geofences, err := scanGeofences(rows)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total := len(geofences)
+	if page.Paginated() {
+		err = s.pool.QueryRow(ctx, `SELECT count(*) FROM geofences WHERE $1 = '' OR category = $1`, category).Scan(&total)
+		if err != nil {
+			return nil, 0, wrap("count geofences", err)
+		}
+	}
+	return geofences, total, nil
+}
+
+func scanGeofences(rows pgx.Rows) ([]Geofence, error) {
 	defer rows.Close()
 
 	geofences := []Geofence{} // non-nil so the API returns [] rather than null
@@ -80,9 +100,11 @@ func (s *Store) ListGeofences(ctx context.Context, category string) ([]Geofence,
 		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.Category, &boundary, &g.Status, &g.CreatedAt); err != nil {
 			return nil, wrap("scan geofence", err)
 		}
-		if g.Boundary, err = geo.PolygonFromGeoJSON(boundary); err != nil {
+		ring, err := geo.PolygonFromGeoJSON(boundary)
+		if err != nil {
 			return nil, wrap("decode boundary of "+g.ID, err)
 		}
+		g.Boundary = ring
 		geofences = append(geofences, g)
 	}
 	if err := rows.Err(); err != nil {
