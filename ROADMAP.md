@@ -27,11 +27,11 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 2 — Location updates + entry/exit
 
-- [ ] 🟥 `POST /vehicles/location`: tx → `FOR UPDATE` → insert location → `ST_Covers` → diff old/new → write `geofence_events` → update state → commit
-- [ ] 🟥 Handle first update, overlapping zones, late timestamps
-- [ ] 🟥 `GET /vehicles/location/{vehicle_id}` (404 if unknown)
-- [ ] 🟥 `GET /violations/history` with all filters, `limit` (default 50, max 500), `offset`, `total_count`
-- [ ] 🟥 Unit tests: set diff, validation; `go test ./... -race`
+- [x] 🟥 `POST /vehicles/location`: tx → `FOR UPDATE` → insert location → `ST_Covers` → diff old/new → write `geofence_events` → update state → commit
+- [x] 🟥 Handle first update, overlapping zones, late timestamps
+- [x] 🟥 `GET /vehicles/location/{vehicle_id}` (404 if unknown)
+- [x] 🟥 `GET /violations/history` with all filters, `limit` (default 50, max 500), `offset`, `total_count`
+- [x] 🟥 Unit tests: set diff, validation; `go test ./... -race`
 - ✅ Scripted run: outside → inside → inside → outside gives exactly 1 entry + 1 exit in history
 
 ## Phase 3 — Alert rules + WebSocket
@@ -122,4 +122,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Thu 12 Nov | Plan, AGENT/DESIGN/ROADMAP written |                  |
 | Thu 12 Nov | Phase 0: compose (PostGIS amd64, emulated), config, respond helpers, /healthz | GitHub repo not created yet |
 | Thu 12 Nov | Phase 1: schema (7 tables) + embedded migrator, geo package, geofence & vehicle endpoints, middleware | Creates return 201 |
+| Fri 13 Nov | Phase 2: tracking service (lock → contain → diff → events → state), vehicle location GET, violation history; exit check + overlap/jump/late/concurrency verified | |
 |            |                                    |                  |
