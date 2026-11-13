@@ -39,19 +39,6 @@ func TestLoad(t *testing.T) {
 				RateLimitRPS: 5.5,
 			},
 		},
-		{
-			name: "origins pasted as full URLs are reduced to scheme://host",
-			env: map[string]string{
-				"DATABASE_URL": "postgres://x",
-				"CORS_ORIGINS": `https://app.vercel.app/geofences, https://app2.vercel.app/ ,"http://localhost:5173",*,HTTPS://Upper.Example`,
-			},
-			want: Config{
-				Port:                       "8080",
-				DatabaseURL:                "postgres://x",
-				CORSOrigins:                []string{"https://app.vercel.app", "https://app2.vercel.app", "http://localhost:5173", "*", "https://upper.example"},
-				RestrictedZoneDefaultAlert: true,
-			},
-		},
 		{name: "missing database url", env: map[string]string{}, wantErr: true},
 		{name: "bad rate limit", env: map[string]string{"DATABASE_URL": "x", "RATE_LIMIT_RPS": "fast"}, wantErr: true},
 		{name: "negative rate limit", env: map[string]string{"DATABASE_URL": "x", "RATE_LIMIT_RPS": "-1"}, wantErr: true},

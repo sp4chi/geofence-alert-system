@@ -5,7 +5,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -34,7 +33,7 @@ func load(getenv func(string) string) (Config, error) {
 	cfg := Config{
 		Port:        withDefault(getenv("PORT"), "8080"),
 		DatabaseURL: getenv("DATABASE_URL"),
-		CORSOrigins: normalizeOrigins(splitList(getenv("CORS_ORIGINS"))),
+		CORSOrigins: splitList(getenv("CORS_ORIGINS")),
 		APIKey:      getenv("API_KEY"),
 	}
 
@@ -62,21 +61,6 @@ func withDefault(value, fallback string) string {
 		return fallback
 	}
 	return value
-}
-
-// normalizeOrigins reduces each entry to "scheme://host[:port]", the exact form browsers send in the
-// Origin header. A URL pasted from the address bar ("https://app.vercel.app/geofences", a trailing
-// slash, or quotes) would otherwise never match and silently block the frontend.
-func normalizeOrigins(entries []string) []string {
-	var origins []string
-	for _, entry := range entries {
-		entry = strings.Trim(entry, `"'`)
-		if u, err := url.Parse(entry); err == nil && u.Scheme != "" && u.Host != "" {
-			entry = strings.ToLower(u.Scheme + "://" + u.Host)
-		}
-		origins = append(origins, entry) // "*" and anything unparseable pass through unchanged
-	}
-	return origins
 }
 
 // splitList turns "a, b,,c" into ["a" "b" "c"].
