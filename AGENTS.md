@@ -93,6 +93,37 @@ npm run build && npm run lint
 ./backend/scripts/simulate.sh <vehicle_id>
 ```
 
+### 4.1 Makefile (create it; keep it the single entry point)
+
+Create a `Makefile` at the repo root so every common task is one short command for humans, agents and the video demo. Once it exists, **prefer `make <target>` over typing the raw commands above**, and add a target whenever you add a new recurring command.
+
+Required targets:
+
+| Target | Does |
+|---|---|
+| `help` (default) | Lists every target with a one-line description (parse `## ` comments after each target) |
+| `up` / `down` | `docker compose up --build -d` / `docker compose down` |
+| `logs` | `docker compose logs -f api` |
+| `db` | Start only the `db` service (for running the API locally with `go run`) |
+| `run` | Run the API locally from `backend/` with variables from `.env` |
+| `test` | `go test ./... -race` in `backend/` |
+| `vet` / `fmt` / `fmt-check` | `go vet ./...` / `gofmt -w .` / fail if `gofmt -l .` prints anything |
+| `build` | Build the Go binary into `backend/bin/` (already git-ignored, or add it) |
+| `check` | `fmt-check` + `vet` + `test` (+ `fe-build` once `frontend/` exists). Run before every commit |
+| `docker-build` / `docker-push` | Build and push the backend image as `$(IMAGE):$(TAG)` |
+| `psql` | Open `psql` inside the `db` container |
+| `reset-db` | `docker compose down -v` (wipes data). Print a warning and require `CONFIRM=1` |
+| `simulate` | `backend/scripts/simulate.sh $(VEHICLE)`; fail with a usage message if `VEHICLE` is empty |
+| `fe-install` / `fe-dev` / `fe-build` | `npm ci` / `npm run dev` / `npm run build` in `frontend/`; print a skip message if `frontend/` doesn't exist yet |
+
+Rules:
+- Declare every target in `.PHONY`. Recipe lines must start with a **tab**, not spaces.
+- Make overridable variables with `?=` at the top: `IMAGE ?= <dockerhub-user>/mapup-geofencing-api`, `TAG ?= latest`, `VEHICLE ?=`. Leave the Docker Hub user as a placeholder and ask the human for it; don't guess.
+- Load `.env` with `-include .env` then `export`, so a missing `.env` doesn't break `make`.
+- Must work with the **GNU Make 3.81 that ships with macOS**: no `.ONESHELL`, no `file`/`let` functions. Chain steps with `cd backend && ...` on one line.
+- Keep recipes thin: a target calls the same commands listed above, with no logic hidden only in the Makefile.
+- After creating it, run `make help` and `make check`, and add a "Make targets" section to `SETUP.md` (or a TODO in `ROADMAP.md` if `SETUP.md` doesn't exist yet).
+
 Environment variables (document any new one in `SETUP.md` and `.env.example`):
 `PORT`, `DATABASE_URL`, `CORS_ORIGINS` (comma list), `API_KEY` (empty = auth off), `RATE_LIMIT_RPS` (0 = off), `RESTRICTED_ZONE_DEFAULT_ALERT` (default `true`), frontend `VITE_API_URL`, `VITE_WS_URL`.
 
@@ -131,7 +162,7 @@ Environment variables (document any new one in `SETUP.md` and `.env.example`):
 
 - [ ] Matches the README contract (diff your JSON against the README example).
 - [ ] `time_ns` present on success **and** error paths.
-- [ ] `go test ./... -race` and `go vet` pass; `npm run build` passes.
+- [ ] `make check` passes (fmt, vet, `go test -race`, and frontend build once it exists).
 - [ ] New env vars documented.
 - [ ] Short comment on any non-obvious decision; bigger decisions go in `DESIGN.md`.
 - [ ] Candidate can explain it — if the change is large, summarise it in 3–5 bullets in the PR/commit message.
