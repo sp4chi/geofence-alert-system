@@ -46,11 +46,11 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 4 — Docker + deploy backend
 
-- [ ] 🟥 Multi-stage `Dockerfile` (small final image, non-root), `.dockerignore`
-- [ ] 🟥 Push image to Docker Hub (`<user>/mapup-geofencing-api:1.0`) — public image, private repo
+- [x] 🟥 Multi-stage `Dockerfile` (small final image, non-root), `.dockerignore`
+- [x] 🟥 Push image to Docker Hub (`sp4chi/mapup-geofencing-api:1.0` (amd64+arm64)) — public image, private repo
 - [ ] 🟥 Deploy (Railway/Render/Fly) + Postgres with PostGIS enabled; `CORS_ORIGINS` set; HTTPS/WSS works
-- [ ] 🟥 `scripts/simulate.sh` drives a vehicle in and out of a zone
-- ✅ curl suite + `wss://…/ws/alerts` work against the **deployed** URL
+- [x] 🟥 `scripts/simulate.sh` drives a vehicle in and out of a zone
+- ✅ curl suite + `wss://…/ws/alerts` work against the **deployed** URL — run `make smoke API_URL=https://…`
 
 ## Phase 5 — Frontend
 
@@ -125,4 +125,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Thu 12 Nov | Phase 1: schema (7 tables) + embedded migrator, geo package, geofence & vehicle endpoints, middleware | Creates return 201 |
 | Fri 13 Nov | Phase 2: tracking service (lock → contain → diff → events → state), vehicle location GET, violation history; exit check + overlap/jump/late/concurrency verified | |
 | Fri 13 Nov | Makefile (AGENTS §4.1). Phase 3: alert rules API, rule matching + restricted default in the location tx, alert_events, WS hub with pumps/ping; 2 listeners verified, origin check, clean shutdown | Docker Hub user still needed for `IMAGE` |
+| Fri 13 Nov | Phase 4: cross-compiling multi-arch Dockerfile, image pushed to Docker Hub, simulate.sh + smoke.sh (`make simulate` / `make smoke`), render.yaml | Render deploy needs the user's dashboard login |
 |            |                                    |                  |
