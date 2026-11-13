@@ -3,3 +3,5 @@
 *.md
 Dockerfile
 .dockerignore
+bin/
+scripts/
