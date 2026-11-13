@@ -36,10 +36,10 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 3 — Alert rules + WebSocket
 
-- [ ] 🟥 `POST /alerts/configure`, `GET /alerts?geofence_id=&vehicle_id=` (with names joined)
-- [ ] 🟥 Rule matching: vehicle-specific or all (NULL), entry/exit/both; restricted-zone default; dedupe
-- [ ] 🟥 Persist `alert_events`; publish **after commit**, non-blocking
-- [ ] 🟥 Hub + read/write pumps + ping/pong at `/ws/alerts`; message format exactly as README
+- [x] 🟥 `POST /alerts/configure`, `GET /alerts?geofence_id=&vehicle_id=` (with names joined)
+- [x] 🟥 Rule matching: vehicle-specific or all (NULL), entry/exit/both; restricted-zone default; dedupe
+- [x] 🟥 Persist `alert_events`; publish **after commit**, non-blocking
+- [x] 🟥 Hub + read/write pumps + ping/pong at `/ws/alerts`; message format exactly as README
 - ✅ `websocat` in two terminals both receive the same alert; HTTP response time unaffected
 
 > 💤 **Sleep by ~2:30 AM.** A tired demo costs more than a missing bonus.
@@ -70,6 +70,7 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 - [ ] 🟥 Deploy frontend to Vercel; deployed FE ↔ deployed BE verified
 - [ ] 🟥 `SETUP.md`: prerequisites, local setup, Docker Compose, curl examples for all 9 endpoints + WS, frontend usage, architecture summary, documented decisions (boundary, first update, restricted default)
+- [ ] 🟥 `SETUP.md`: add a "Make targets" section (paste `make help` output) — required by AGENTS.md §4.1
 - [ ] 🟥 Fresh-clone test: `git clone` into new folder → `docker compose up` works
 - [ ] 🟨 Bonus (only if all 🟥 green): rate limit on `/vehicles/location` (429 + `time_ns`), optional API key, pagination on all lists, more unit tests
 - ✅ "Before you submit" list from the Prep Guide all ticked
@@ -123,4 +124,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Thu 12 Nov | Phase 0: compose (PostGIS amd64, emulated), config, respond helpers, /healthz | GitHub repo not created yet |
 | Thu 12 Nov | Phase 1: schema (7 tables) + embedded migrator, geo package, geofence & vehicle endpoints, middleware | Creates return 201 |
 | Fri 13 Nov | Phase 2: tracking service (lock → contain → diff → events → state), vehicle location GET, violation history; exit check + overlap/jump/late/concurrency verified | |
+| Fri 13 Nov | Makefile (AGENTS §4.1). Phase 3: alert rules API, rule matching + restricted default in the location tx, alert_events, WS hub with pumps/ping; 2 listeners verified, origin check, clean shutdown | Docker Hub user still needed for `IMAGE` |
 |            |                                    |                  |
