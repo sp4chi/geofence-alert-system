@@ -72,7 +72,7 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 - [x] 🟥 `SETUP.md`: prerequisites, local setup, Docker Compose, curl examples for all 9 endpoints + WS, frontend usage, architecture summary, documented decisions (boundary, first update, restricted default)
 - [x] 🟥 `SETUP.md`: add a "Make targets" section (paste `make help` output) — required by AGENTS.md §4.1
 - [x] 🟥 Fresh-clone test: `git clone` into new folder → `docker compose up` works
-- [ ] 🟨 Bonus (only if all 🟥 green): rate limit on `/vehicles/location` (429 + `time_ns`), optional API key, pagination on all lists, more unit tests
+- [x] 🟨 Bonus (only if all 🟥 green): rate limit on `/vehicles/location` (429 + `time_ns`), optional API key, pagination on all lists, more unit tests — all off by default; verified on/off locally
 - ✅ "Before you submit" list from the Prep Guide all ticked
 
 ## Phase 7 — Video (record ~45 min, upload unlisted)
@@ -130,4 +130,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Phase 6 (local): web container (nginx) in compose, SETUP.md + README.md, SETUP walkthrough run as written, fresh clone on custom ports passes smoke + UI; fixed CORS when WEB_HOST_PORT changes | Waiting on Render URL + Vercel import; 38+ commits not pushed |
 | Fri 13 Nov | Render deploy live: `make smoke` passes over HTTPS + WSS; latest code (bow-tie fix) confirmed; CORS allows localhost:5173 | Add Vercel URL to Render `CORS_ORIGINS` after frontend deploy |
 | Fri 13 Nov | Vercel live; CORS fixed on Render; production verified in browser (2 tabs, live alert) | CORS normalization reverted (exact origin set in Render) |
+| Fri 13 Nov | Bonus: token-bucket rate limit, optional API key (FE sends VITE_API_KEY), optional limit/offset + total_count on all lists, tests; smoke passes with defaults | Not pushed/deployed yet |
 |            |                                    |                  |
