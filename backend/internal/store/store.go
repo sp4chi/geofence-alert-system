@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Domain errors. The HTTP layer maps these to status codes in one place (httpapi/errors.go).
+// Domain errors (match with errors.Is). The HTTP layer maps these to status codes in one place (httpapi/errors.go).
 var (
 	ErrNotFound  = errors.New("not found")
 	ErrDuplicate = errors.New("already exists")
@@ -23,6 +23,16 @@ type domainError struct {
 
 func (e *domainError) Error() string { return e.message }
 func (e *domainError) Unwrap() error { return e.kind }
+
+// ClientMessage returns the client-safe message of a not-found/duplicate error, even when callers
+// have wrapped it with internal context (e.g. "update location of veh_1: ...").
+func ClientMessage(err error) string {
+	var domain *domainError
+	if errors.As(err, &domain) {
+		return domain.message
+	}
+	return err.Error()
+}
 
 // InvalidGeometryError means PostGIS rejected a shape (e.g. a self-intersecting "bow-tie" polygon).
 type InvalidGeometryError struct {
