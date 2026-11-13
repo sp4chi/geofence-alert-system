@@ -14,8 +14,9 @@ import type {
   Violation,
 } from './types'
 
-export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '')
-export const WS_URL = import.meta.env.VITE_WS_URL ?? `${API_URL.replace(/^http/, 'ws')}/ws/alerts`
+// `||` (not `??`) so an empty value, e.g. `VITE_WS_URL=` in a Docker build arg, falls back too.
+export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
+export const WS_URL = import.meta.env.VITE_WS_URL || `${API_URL.replace(/^http/, 'ws')}/ws/alerts` // http→ws, https→wss
 
 export class ApiError extends Error {
   status: number
