@@ -36,7 +36,8 @@ type vehicleJSON struct {
 }
 
 type listVehiclesResponse struct {
-	Vehicles []vehicleJSON `json:"vehicles"`
+	Vehicles   []vehicleJSON `json:"vehicles"`
+	TotalCount *int          `json:"total_count,omitempty"` // only with ?limit/offset
 }
 
 func (a *API) handleCreateVehicle(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +114,13 @@ func isPhoneNumber(phone string) bool {
 func (a *API) handleListVehicles(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
-	vehicles, err := a.store.ListVehicles(r.Context())
+	page, problems := parsePage(r.URL.Query(), 0)
+	if len(problems) > 0 {
+		respondError(w, http.StatusBadRequest, start, "invalid query parameters", problems...)
+		return
+	}
+
+	vehicles, total, err := a.store.ListVehicles(r.Context(), page)
 	if err != nil {
 		respondStoreError(w, r, start, err)
 		return
@@ -131,5 +138,5 @@ func (a *API) handleListVehicles(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:     formatTime(v.CreatedAt),
 		}
 	}
-	respond(w, http.StatusOK, start, listVehiclesResponse{Vehicles: out})
+	respond(w, http.StatusOK, start, listVehiclesResponse{Vehicles: out, TotalCount: totalIfPaginated(page, total)})
 }
