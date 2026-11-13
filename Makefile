@@ -1,9 +1,11 @@
 # Single entry point for common tasks. Run `make` (or `make help`) to list targets.
 # Works with the GNU Make 3.81 that ships with macOS.
 
-IMAGE   ?= <dockerhub-user>/mapup-geofencing-api
-TAG     ?= latest
-VEHICLE ?=
+IMAGE    ?= sp4chi/mapup-geofencing-api
+TAG      ?= 1.0
+VEHICLE  ?=
+GEOFENCE ?=
+API_URL  ?= http://localhost:8080
 
 # Load .env if present (a missing file is fine) and pass its variables to every recipe.
 -include .env
@@ -12,7 +14,7 @@ export
 .DEFAULT_GOAL := help
 
 .PHONY: help up down logs db run test vet fmt fmt-check build check \
-        docker-build docker-push psql reset-db simulate fe-install fe-dev fe-build
+        docker-build docker-push psql reset-db simulate smoke fe-install fe-dev fe-build
 
 help: ## List all targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-13s\033[0m %s\n", $$1, $$2}'
@@ -49,11 +51,11 @@ build: ## Build the API binary into backend/bin/
 
 check: fmt-check vet test fe-build ## Everything that must pass before a commit
 
-docker-build: ## Build the backend image as $(IMAGE):$(TAG)
+docker-build: ## Build the backend image for this machine as $(IMAGE):$(TAG)
 	docker build -t $(IMAGE):$(TAG) backend
 
-docker-push: docker-build ## Push $(IMAGE):$(TAG) to Docker Hub
-	docker push $(IMAGE):$(TAG)
+docker-push: ## Build amd64+arm64 and push $(IMAGE):$(TAG) and :latest to Docker Hub
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE):$(TAG) -t $(IMAGE):latest --push backend
 
 psql: ## Open psql inside the db container
 	docker compose exec db psql -U geofence -d geofence
@@ -62,9 +64,12 @@ reset-db: ## Delete all data (docker compose down -v); needs CONFIRM=1
 	@if [ "$(CONFIRM)" != "1" ]; then echo "WARNING: this deletes the database volume. Run: make reset-db CONFIRM=1"; exit 1; fi
 	docker compose down -v
 
-simulate: ## Drive VEHICLE in and out of a geofence: make simulate VEHICLE=veh_...
-	@if [ -z "$(VEHICLE)" ]; then echo "usage: make simulate VEHICLE=<vehicle_id>"; exit 1; fi
-	./backend/scripts/simulate.sh $(VEHICLE)
+simulate: ## Drive VEHICLE across a geofence: make simulate VEHICLE=veh_... [GEOFENCE=geo_...] [API_URL=...]
+	@if [ -z "$(VEHICLE)" ]; then echo "usage: make simulate VEHICLE=<vehicle_id> [GEOFENCE=<geofence_id>]"; exit 1; fi
+	./backend/scripts/simulate.sh $(VEHICLE) $(GEOFENCE)
+
+smoke: ## Test every endpoint + WebSocket against API_URL (default local)
+	./backend/scripts/smoke.sh
 
 fe-install: ## Install frontend dependencies (npm ci)
 	@if [ -d frontend ]; then cd frontend && npm ci; else echo "frontend/ does not exist yet, skipping"; fi
