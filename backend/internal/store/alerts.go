@@ -61,19 +61,21 @@ func (s *Store) CreateAlertRule(ctx context.Context, in NewAlertRule) (AlertRule
 	}
 }
 
-// ListAlertRules returns rules newest first. Filters are exact matches; "" means no filter.
-// (vehicle_id=X does not include "all vehicles" rules — those have vehicle_id null.)
-func (s *Store) ListAlertRules(ctx context.Context, geofenceID, vehicleID string) ([]AlertRule, error) {
+// ListAlertRules returns rules newest first, plus the total matching count. Filters are exact
+// matches; "" means no filter. (vehicle_id=X does not include "all vehicles" rules — those have
+// vehicle_id null.) An empty Page means all of them.
+func (s *Store) ListAlertRules(ctx context.Context, geofenceID, vehicleID string, page Page) ([]AlertRule, int, error) {
+	const where = `WHERE ($1 = '' OR r.geofence_id = $1) AND ($2 = '' OR r.vehicle_id = $2)`
 	rows, err := s.pool.Query(ctx, `
 		SELECT r.id, r.geofence_id, g.name, r.vehicle_id, v.vehicle_number, r.event_type, r.status, r.created_at
 		FROM alert_rules r
 		JOIN geofences g ON g.id = r.geofence_id
 		LEFT JOIN vehicles v ON v.id = r.vehicle_id
-		WHERE ($1 = '' OR r.geofence_id = $1)
-		  AND ($2 = '' OR r.vehicle_id = $2)
-		ORDER BY r.created_at DESC, r.id DESC`, geofenceID, vehicleID)
+		`+where+`
+		ORDER BY r.created_at DESC, r.id DESC
+		LIMIT NULLIF($3, 0) OFFSET $4`, geofenceID, vehicleID, page.Limit, page.Offset)
 	if err != nil {
-		return nil, wrap("list alert rules", err)
+		return nil, 0, wrap("list alert rules", err)
 	}
 	rules, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (AlertRule, error) {
 		var r AlertRule
@@ -81,12 +83,20 @@ func (s *Store) ListAlertRules(ctx context.Context, geofenceID, vehicleID string
 		return r, err
 	})
 	if err != nil {
-		return nil, wrap("scan alert rules", err)
+		return nil, 0, wrap("scan alert rules", err)
 	}
 	if rules == nil {
 		rules = []AlertRule{}
 	}
-	return rules, nil
+
+	total := len(rules)
+	if page.Paginated() {
+		err := s.pool.QueryRow(ctx, `SELECT count(*) FROM alert_rules r `+where, geofenceID, vehicleID).Scan(&total)
+		if err != nil {
+			return nil, 0, wrap("count alert rules", err)
+		}
+	}
+	return rules, total, nil
 }
 
 // MatchingRule returns the ID of an active rule for this crossing, or nil if none matches.
