@@ -24,8 +24,9 @@ services:
       DATABASE_URL: postgres://geofence:geofence@db:5432/geofence?sslmode=disable
       # The web container below (follows WEB_HOST_PORT) and `npm run dev` (5173)
       CORS_ORIGINS: http://localhost:${WEB_HOST_PORT:-3000},http://localhost:5173
-      API_KEY: ""
-      RATE_LIMIT_RPS: "0"
+      # Optional hardening, off by default; e.g. `API_KEY=demo RATE_LIMIT_RPS=5 docker compose up`
+      API_KEY: ${API_KEY:-}
+      RATE_LIMIT_RPS: ${RATE_LIMIT_RPS:-0}
       RESTRICTED_ZONE_DEFAULT_ALERT: "true"
     ports:
       - "${API_HOST_PORT:-8080}:8080"
@@ -39,6 +40,7 @@ services:
       args:
         # The browser calls the API from the host machine, so this is the host-mapped port.
         VITE_API_URL: http://localhost:${API_HOST_PORT:-8080}
+        VITE_API_KEY: ${API_KEY:-}
     ports:
       - "${WEB_HOST_PORT:-3000}:80"
     depends_on:
