@@ -58,11 +58,13 @@ func run() error {
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: httpapi.NewRouter(httpapi.Options{
-			Health:      db,
-			Store:       db,
-			Tracker:     tracking.New(db, hub, cfg.RestrictedZoneDefaultAlert),
-			Hub:         hub,
-			CORSOrigins: cfg.CORSOrigins,
+			Health:       db,
+			Store:        db,
+			Tracker:      tracking.New(db, hub, cfg.RestrictedZoneDefaultAlert),
+			Hub:          hub,
+			CORSOrigins:  cfg.CORSOrigins,
+			APIKey:       cfg.APIKey,
+			RateLimitRPS: cfg.RateLimitRPS,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
 		// No WriteTimeout: it would kill long-lived WebSocket connections on /ws/alerts.
