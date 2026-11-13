@@ -4,9 +4,11 @@ package tracking
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	"geofencing/internal/alerts"
 	"geofencing/internal/geo"
 	"geofencing/internal/ids"
 	"geofencing/internal/store"
@@ -15,14 +17,24 @@ import (
 const (
 	EventEntry = "entry"
 	EventExit  = "exit"
+
+	restrictedZone = "restricted_zone"
 )
 
-type Service struct {
-	store *store.Store
+// Publisher delivers alerts to live clients. Publish must not block (the hub's does not).
+type Publisher interface {
+	Publish(alerts.Message)
 }
 
-func New(st *store.Store) *Service {
-	return &Service{store: st}
+type Service struct {
+	store     *store.Store
+	publisher Publisher
+	// restrictedDefault: entering a restricted_zone alerts even when no rule is configured.
+	restrictedDefault bool
+}
+
+func New(st *store.Store, publisher Publisher, restrictedDefault bool) *Service {
+	return &Service{store: st, publisher: publisher, restrictedDefault: restrictedDefault}
 }
 
 type Update struct {
@@ -38,10 +50,11 @@ type Result struct {
 	Applied bool
 	// Current is the set of geofences the vehicle is inside after this update.
 	Current []store.GeofenceRef
-	// Events lists the crossings this update caused; Geofences[i] is the geofence of Events[i]
-	// (its name and category are needed for alert payloads).
-	Events    []store.GeofenceEvent
-	Geofences []store.GeofenceRef
+	// Events lists every crossing this update caused.
+	Events []store.GeofenceEvent
+	// Alerts are the crossings that matched a rule (or the restricted default). They are stored
+	// in the transaction and published only after it commits.
+	Alerts []alerts.Message
 }
 
 // UpdateLocation runs the whole update in one transaction (see DESIGN.md §2.1):
@@ -109,9 +122,16 @@ func (s *Service) UpdateLocation(ctx context.Context, u Update) (Result, error) 
 	if err != nil {
 		return Result{}, fmt.Errorf("update location of %s: %w", u.VehicleID, err)
 	}
+
+	// Only after commit: if the transaction had rolled back, these crossings never happened
+	// and nobody must be told about them. Publish is non-blocking, so the response isn't delayed.
+	for _, msg := range result.Alerts {
+		s.publisher.Publish(msg)
+	}
 	return result, nil
 }
 
+// recordCrossing stores one entry/exit event and, if it should alert, the alert with its payload.
 func (s *Service) recordCrossing(ctx context.Context, tx *store.Tx, result *Result, u Update, g store.GeofenceRef, eventType string) error {
 	event := store.GeofenceEvent{
 		ID:         ids.New(ids.Violation),
@@ -125,8 +145,39 @@ func (s *Service) recordCrossing(ctx context.Context, tx *store.Tx, result *Resu
 		return err
 	}
 	result.Events = append(result.Events, event)
-	result.Geofences = append(result.Geofences, g)
+
+	ruleID, err := tx.MatchingRule(ctx, g.ID, u.VehicleID, eventType)
+	if err != nil {
+		return err
+	}
+	if !shouldAlert(ruleID != nil, eventType, g.Category, s.restrictedDefault) {
+		return nil
+	}
+
+	msg := alerts.NewMessage(ids.New(ids.AlertEvent), event, result.Vehicle, g)
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("encode alert payload: %w", err)
+	}
+	if err := tx.InsertAlertEvent(ctx, store.AlertEvent{
+		ID:              msg.EventID,
+		RuleID:          ruleID,
+		GeofenceEventID: event.ID,
+		Payload:         payload,
+	}); err != nil {
+		return err
+	}
+	result.Alerts = append(result.Alerts, msg)
 	return nil
+}
+
+// shouldAlert: a matching rule always alerts. Without one, only an entry into a restricted zone
+// does, and only while the restricted-zone default is switched on.
+func shouldAlert(ruleMatched bool, eventType, category string, restrictedDefault bool) bool {
+	if ruleMatched {
+		return true
+	}
+	return restrictedDefault && eventType == EventEntry && category == restrictedZone
 }
 
 // isStale reports whether a point is older than the last accepted one.
