@@ -38,7 +38,8 @@ type alertRuleJSON struct {
 }
 
 type listAlertsResponse struct {
-	Alerts []alertRuleJSON `json:"alerts"`
+	Alerts     []alertRuleJSON `json:"alerts"`
+	TotalCount *int            `json:"total_count,omitempty"` // only with ?limit/offset
 }
 
 func (a *API) handleConfigureAlert(w http.ResponseWriter, r *http.Request) {
@@ -97,9 +98,16 @@ func (a *API) handleListAlerts(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	query := r.URL.Query()
-	rules, err := a.store.ListAlertRules(r.Context(),
+	page, problems := parsePage(query, 0)
+	if len(problems) > 0 {
+		respondError(w, http.StatusBadRequest, start, "invalid query parameters", problems...)
+		return
+	}
+
+	rules, total, err := a.store.ListAlertRules(r.Context(),
 		strings.TrimSpace(query.Get("geofence_id")),
-		strings.TrimSpace(query.Get("vehicle_id")))
+		strings.TrimSpace(query.Get("vehicle_id")),
+		page)
 	if err != nil {
 		respondStoreError(w, r, start, err)
 		return
@@ -118,7 +126,7 @@ func (a *API) handleListAlerts(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:     formatTime(rule.CreatedAt),
 		}
 	}
-	respond(w, http.StatusOK, start, listAlertsResponse{Alerts: out})
+	respond(w, http.StatusOK, start, listAlertsResponse{Alerts: out, TotalCount: totalIfPaginated(page, total)})
 }
 
 func contains(list []string, value string) bool {
