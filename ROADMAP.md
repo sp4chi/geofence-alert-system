@@ -129,5 +129,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Phase 5: React app (map + draw, vehicles + click-to-locate, alert rules, live feed/toasts/pill, history with URL filters + pagination); verified in headless Chrome incl. 390 px; fixed bow-tie message bug in `geo` | Frontend not deployed yet (Phase 6) |
 | Fri 13 Nov | Phase 6 (local): web container (nginx) in compose, SETUP.md + README.md, SETUP walkthrough run as written, fresh clone on custom ports passes smoke + UI; fixed CORS when WEB_HOST_PORT changes | Waiting on Render URL + Vercel import; 38+ commits not pushed |
 | Fri 13 Nov | Render deploy live: `make smoke` passes over HTTPS + WSS; latest code (bow-tie fix) confirmed; CORS allows localhost:5173 | Add Vercel URL to Render `CORS_ORIGINS` after frontend deploy |
-| Fri 13 Nov | Vercel live; CORS fixed on Render; production verified in browser (2 tabs, live alert) | CORS-normalization commits not pushed yet |
+| Fri 13 Nov | Vercel live; CORS fixed on Render; production verified in browser (2 tabs, live alert) | CORS normalization reverted (exact origin set in Render) |
 |            |                                    |                  |
