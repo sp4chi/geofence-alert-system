@@ -69,9 +69,9 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 ## Phase 6 — Ship + docs
 
 - [ ] 🟥 Deploy frontend to Vercel; deployed FE ↔ deployed BE verified
-- [ ] 🟥 `SETUP.md`: prerequisites, local setup, Docker Compose, curl examples for all 9 endpoints + WS, frontend usage, architecture summary, documented decisions (boundary, first update, restricted default)
-- [ ] 🟥 `SETUP.md`: add a "Make targets" section (paste `make help` output) — required by AGENTS.md §4.1
-- [ ] 🟥 Fresh-clone test: `git clone` into new folder → `docker compose up` works
+- [x] 🟥 `SETUP.md`: prerequisites, local setup, Docker Compose, curl examples for all 9 endpoints + WS, frontend usage, architecture summary, documented decisions (boundary, first update, restricted default)
+- [x] 🟥 `SETUP.md`: add a "Make targets" section (paste `make help` output) — required by AGENTS.md §4.1
+- [x] 🟥 Fresh-clone test: `git clone` into new folder → `docker compose up` works
 - [ ] 🟨 Bonus (only if all 🟥 green): rate limit on `/vehicles/location` (429 + `time_ns`), optional API key, pagination on all lists, more unit tests
 - ✅ "Before you submit" list from the Prep Guide all ticked
 
@@ -127,4 +127,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Makefile (AGENTS §4.1). Phase 3: alert rules API, rule matching + restricted default in the location tx, alert_events, WS hub with pumps/ping; 2 listeners verified, origin check, clean shutdown | Docker Hub user still needed for `IMAGE` |
 | Fri 13 Nov | Phase 4: cross-compiling multi-arch Dockerfile, image pushed to Docker Hub, simulate.sh + smoke.sh (`make simulate` / `make smoke`), render.yaml | Render deploy needs the user's dashboard login |
 | Fri 13 Nov | Phase 5: React app (map + draw, vehicles + click-to-locate, alert rules, live feed/toasts/pill, history with URL filters + pagination); verified in headless Chrome incl. 390 px; fixed bow-tie message bug in `geo` | Frontend not deployed yet (Phase 6) |
+| Fri 13 Nov | Phase 6 (local): web container (nginx) in compose, SETUP.md + README.md, SETUP walkthrough run as written, fresh clone on custom ports passes smoke + UI; fixed CORS when WEB_HOST_PORT changes | Waiting on Render URL + Vercel import; 38+ commits not pushed |
 |            |                                    |                  |
