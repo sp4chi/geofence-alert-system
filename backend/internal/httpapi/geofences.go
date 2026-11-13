@@ -50,7 +50,8 @@ type geofenceJSON struct {
 }
 
 type listGeofencesResponse struct {
-	Geofences []geofenceJSON `json:"geofences"`
+	Geofences  []geofenceJSON `json:"geofences"`
+	TotalCount *int           `json:"total_count,omitempty"` // only with ?limit/offset
 }
 
 func (a *API) handleCreateGeofence(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +126,13 @@ func (a *API) handleListGeofences(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geofences, err := a.store.ListGeofences(r.Context(), category)
+	page, problems := parsePage(r.URL.Query(), 0)
+	if len(problems) > 0 {
+		respondError(w, http.StatusBadRequest, start, "invalid query parameters", problems...)
+		return
+	}
+
+	geofences, total, err := a.store.ListGeofences(r.Context(), category, page)
 	if err != nil {
 		respondStoreError(w, r, start, err)
 		return
@@ -142,5 +149,5 @@ func (a *API) handleListGeofences(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:   formatTime(g.CreatedAt),
 		}
 	}
-	respond(w, http.StatusOK, start, listGeofencesResponse{Geofences: out})
+	respond(w, http.StatusOK, start, listGeofencesResponse{Geofences: out, TotalCount: totalIfPaginated(page, total)})
 }
