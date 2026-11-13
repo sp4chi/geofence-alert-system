@@ -54,20 +54,34 @@ func logRequests(next http.Handler) http.Handler {
 	})
 }
 
+// originPolicy is the CORS_ORIGINS allow-list, shared by CORS and the WebSocket handshake.
+type originPolicy struct {
+	allowAll bool
+	allowed  map[string]bool
+}
+
+func newOriginPolicy(origins []string) originPolicy {
+	p := originPolicy{allowed: make(map[string]bool, len(origins))}
+	for _, origin := range origins {
+		p.allowAll = p.allowAll || origin == "*"
+		p.allowed[origin] = true
+	}
+	return p
+}
+
+// allows reports whether a request from origin may proceed. No Origin header means a non-browser
+// client (curl, websocat, the evaluator's tests), which CORS is not meant to restrict.
+func (p originPolicy) allows(origin string) bool {
+	return origin == "" || p.allowAll || p.allowed[origin]
+}
+
 // cors allows browsers on the listed origins to call the API. "*" in the list allows any origin.
 // We echo the request's Origin rather than sending "*" so the allow-list is real.
-func cors(allowedOrigins []string) middleware {
-	allowAll := false
-	allowed := make(map[string]bool, len(allowedOrigins))
-	for _, origin := range allowedOrigins {
-		allowAll = allowAll || origin == "*"
-		allowed[origin] = true
-	}
-
+func cors(policy originPolicy) middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
-			if origin != "" && (allowAll || allowed[origin]) {
+			if origin != "" && policy.allows(origin) {
 				h := w.Header()
 				h.Set("Access-Control-Allow-Origin", origin)
 				h.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
