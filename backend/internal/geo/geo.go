@@ -68,7 +68,7 @@ func ParsePolygon(pairs [][]float64) ([]Point, []string) {
 	}
 	if countDistinct(ring) < 3 {
 		problems = append(problems, "polygon must have at least 3 distinct points")
-	} else if planarArea(ring) == 0 {
+	} else if allCollinear(ring) {
 		// PostGIS would also reject this, but calls it "self-intersection", which confuses users.
 		problems = append(problems, "polygon has no area (all points lie on one straight line)")
 	}
@@ -86,17 +86,25 @@ func countDistinct(ring []Point) int {
 	return len(seen)
 }
 
-// planarArea is the shoelace formula on the lng/lat plane (absolute value, in square degrees).
-// Only used to detect zero-area rings, so the unit doesn't matter.
-func planarArea(ring []Point) float64 {
-	var twiceArea float64
-	for i := 0; i < len(ring)-1; i++ {
-		twiceArea += ring[i].Lng*ring[i+1].Lat - ring[i+1].Lng*ring[i].Lat
+// allCollinear reports whether every point lies on the line through the first two distinct points.
+// (A signed-area test is not enough: a symmetric "bow-tie" also has zero net area, but it is a
+// self-intersection, which PostGIS reports with the right message.)
+func allCollinear(ring []Point) bool {
+	a := ring[0]
+	var b Point
+	for _, p := range ring[1:] {
+		if p != a {
+			b = p
+			break
+		}
 	}
-	if twiceArea < 0 {
-		twiceArea = -twiceArea
+	for _, p := range ring {
+		// Cross product of (b − a) and (p − a) is zero exactly when p is on line ab.
+		if (b.Lng-a.Lng)*(p.Lat-a.Lat)-(b.Lat-a.Lat)*(p.Lng-a.Lng) != 0 {
+			return false
+		}
 	}
-	return twiceArea / 2
+	return true
 }
 
 // Pairs converts a ring back to the API shape [[lat, lng], ...].
