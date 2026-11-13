@@ -62,6 +62,30 @@ func assertIDs(t *testing.T, label string, got, want []string) {
 	}
 }
 
+func TestShouldAlert(t *testing.T) {
+	tests := []struct {
+		name              string
+		ruleMatched       bool
+		eventType         string
+		category          string
+		restrictedDefault bool
+		want              bool
+	}{
+		{"rule matched on any zone", true, EventExit, "delivery_zone", false, true},
+		{"no rule, ordinary zone", false, EventEntry, "delivery_zone", true, false},
+		{"no rule, restricted entry, default on", false, EventEntry, "restricted_zone", true, true},
+		{"no rule, restricted exit, default on", false, EventExit, "restricted_zone", true, false},
+		{"no rule, restricted entry, default off", false, EventEntry, "restricted_zone", false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldAlert(tt.ruleMatched, tt.eventType, tt.category, tt.restrictedDefault); got != tt.want {
+				t.Errorf("shouldAlert = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsStale(t *testing.T) {
 	last := time.Date(2025, 1, 15, 10, 35, 0, 0, time.UTC)
 
