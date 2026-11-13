@@ -4,6 +4,17 @@ Real-time geofencing and vehicle tracking, built for the MapUp Full-Stack Develo
 
 Draw zones on a map, register vehicles and stream their positions. The system works out every entry and exit with PostGIS, stores the full history, and pushes alerts to every open dashboard over WebSocket the moment a vehicle crosses into a restricted zone or matches an alert rule.
 
+## Live deployment
+
+| | URL |
+|---|---|
+| Web app (Vercel) | https://frontend-ivory-delta-38.vercel.app |
+| API (Render) | https://geofence-alert-system-ytl8.onrender.com (health: [`/healthz`](https://geofence-alert-system-ytl8.onrender.com/healthz)) |
+| WebSocket | `wss://geofence-alert-system-ytl8.onrender.com/ws/alerts` |
+| Docker image | [`sp4chi/mapup-geofencing-api`](https://hub.docker.com/r/sp4chi/mapup-geofencing-api) |
+
+The API runs on Render's free tier, which sleeps after 15 minutes without traffic: the first request after that can take about a minute while it wakes up.
+
 ## Run it
 
 ```bash
