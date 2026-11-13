@@ -20,9 +20,9 @@ func respondStoreError(w http.ResponseWriter, r *http.Request, start time.Time, 
 	case errors.As(err, &geometryErr):
 		respondError(w, http.StatusBadRequest, start, "invalid geofence", describeGeometryProblem(geometryErr.Reason))
 	case errors.Is(err, store.ErrNotFound):
-		respondError(w, http.StatusNotFound, start, err.Error())
+		respondError(w, http.StatusNotFound, start, store.ClientMessage(err))
 	case errors.Is(err, store.ErrDuplicate):
-		respondError(w, http.StatusConflict, start, err.Error())
+		respondError(w, http.StatusConflict, start, store.ClientMessage(err))
 	case errors.Is(err, context.Canceled):
 		// The client disconnected; nobody is listening, but keep the contract anyway.
 		respondError(w, http.StatusServiceUnavailable, start, "request cancelled")
