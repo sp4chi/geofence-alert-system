@@ -16,7 +16,13 @@ import type {
 
 // `||` (not `??`) so an empty value, e.g. `VITE_WS_URL=` in a Docker build arg, falls back too.
 export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/$/, '')
-export const WS_URL = import.meta.env.VITE_WS_URL || `${API_URL.replace(/^http/, 'ws')}/ws/alerts` // http→ws, https→wss
+// Optional: only needed when the backend runs with API_KEY set. It ships inside the bundle, so it
+// keeps casual callers out but is not a secret from anyone who opens the app.
+const API_KEY = import.meta.env.VITE_API_KEY || ''
+
+const BASE_WS_URL = import.meta.env.VITE_WS_URL || `${API_URL.replace(/^http/, 'ws')}/ws/alerts` // http→ws, https→wss
+// Browsers can't set headers on a WebSocket handshake, so the key goes in the query string there.
+export const WS_URL = API_KEY ? `${BASE_WS_URL}?api_key=${encodeURIComponent(API_KEY)}` : BASE_WS_URL
 
 export class ApiError extends Error {
   status: number
@@ -35,7 +41,10 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
   try {
     response = await fetch(API_URL + path, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers: {
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
