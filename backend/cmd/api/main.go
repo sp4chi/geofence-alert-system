@@ -15,6 +15,7 @@ import (
 	"geofencing/internal/config"
 	"geofencing/internal/httpapi"
 	"geofencing/internal/store"
+	"geofencing/internal/tracking"
 	"geofencing/migrations"
 )
 
@@ -53,6 +54,7 @@ func run() error {
 		Handler: httpapi.NewRouter(httpapi.Options{
 			Health:      db,
 			Store:       db,
+			Tracker:     tracking.New(db),
 			CORSOrigins: cfg.CORSOrigins,
 		}),
 		ReadHeaderTimeout: 5 * time.Second,
