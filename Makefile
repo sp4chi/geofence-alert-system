@@ -19,7 +19,7 @@ export
 help: ## List all targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[36m%-13s\033[0m %s\n", $$1, $$2}'
 
-up: ## Build and start db + api in the background
+up: ## Build and start db + api + web (UI on :3000) in the background
 	docker compose up --build -d
 
 down: ## Stop all containers (keeps data)
