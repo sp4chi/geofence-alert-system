@@ -6,7 +6,8 @@ RUN npm ci
 COPY . .
 ARG VITE_API_URL=http://localhost:8080
 ARG VITE_WS_URL=
-RUN VITE_API_URL=$VITE_API_URL VITE_WS_URL=$VITE_WS_URL npm run build
+ARG VITE_API_KEY=
+RUN VITE_API_URL=$VITE_API_URL VITE_WS_URL=$VITE_WS_URL VITE_API_KEY=$VITE_API_KEY npm run build
 
 # Stage 2: serve the files with nginx (SPA fallback + cache headers in nginx.conf).
 FROM nginx:1.27-alpine
