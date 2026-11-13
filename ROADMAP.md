@@ -18,11 +18,11 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 1 — Schema + geofences + vehicles
 
-- [ ] 🟥 Migrations: all 7 tables, GiST index on `geofences.boundary`, B-tree indexes from DESIGN §3
-- [ ] 🟥 `internal/geo`: lat/lng ⇄ PostGIS conversion (one place), polygon validation + table tests
-- [ ] 🟥 `POST /geofences` (400 on every invalid case, `ST_IsValid`), `GET /geofences?category=`
-- [ ] 🟥 `POST /vehicles` (409 on duplicate number), `GET /vehicles`
-- [ ] 🟥 Middleware: recover, request log, CORS allow-list
+- [x] 🟥 Migrations: all 7 tables, GiST index on `geofences.boundary`, B-tree indexes from DESIGN §3
+- [x] 🟥 `internal/geo`: lat/lng ⇄ PostGIS conversion (one place), polygon validation + table tests
+- [x] 🟥 `POST /geofences` (400 on every invalid case, `ST_IsValid`), `GET /geofences?category=`
+- [x] 🟥 `POST /vehicles` (409 on duplicate number), `GET /vehicles`
+- [x] 🟥 Middleware: recover, request log, CORS allow-list
 - ✅ curl each endpoint; JSON shape diffed against README; invalid geofence → clear 400 with `time_ns`
 
 ## Phase 2 — Location updates + entry/exit
@@ -121,4 +121,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | ---------- | ---------------------------------- | ---------------- |
 | Thu 12 Nov | Plan, AGENT/DESIGN/ROADMAP written |                  |
 | Thu 12 Nov | Phase 0: compose (PostGIS amd64, emulated), config, respond helpers, /healthz | GitHub repo not created yet |
+| Thu 12 Nov | Phase 1: schema (7 tables) + embedded migrator, geo package, geofence & vehicle endpoints, middleware | Creates return 201 |
 |            |                                    |                  |
