@@ -48,7 +48,7 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 - [x] 🟥 Multi-stage `Dockerfile` (small final image, non-root), `.dockerignore`
 - [x] 🟥 Push image to Docker Hub (`sp4chi/mapup-geofencing-api:1.0` (amd64+arm64)) — public image, private repo
-- [ ] 🟥 Deploy (Railway/Render/Fly) + Postgres with PostGIS enabled; `CORS_ORIGINS` set; HTTPS/WSS works
+- [x] 🟥 Deploy (Railway/Render/Fly) + Postgres with PostGIS enabled; `CORS_ORIGINS` set; HTTPS/WSS works — Render: https://geofence-alert-system-ytl8.onrender.com (built from repo `backend/`), smoke passes over HTTPS/WSS
 - [x] 🟥 `scripts/simulate.sh` drives a vehicle in and out of a zone
 - ✅ curl suite + `wss://…/ws/alerts` work against the **deployed** URL — run `make smoke API_URL=https://…`
 
@@ -128,4 +128,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Phase 4: cross-compiling multi-arch Dockerfile, image pushed to Docker Hub, simulate.sh + smoke.sh (`make simulate` / `make smoke`), render.yaml | Render deploy needs the user's dashboard login |
 | Fri 13 Nov | Phase 5: React app (map + draw, vehicles + click-to-locate, alert rules, live feed/toasts/pill, history with URL filters + pagination); verified in headless Chrome incl. 390 px; fixed bow-tie message bug in `geo` | Frontend not deployed yet (Phase 6) |
 | Fri 13 Nov | Phase 6 (local): web container (nginx) in compose, SETUP.md + README.md, SETUP walkthrough run as written, fresh clone on custom ports passes smoke + UI; fixed CORS when WEB_HOST_PORT changes | Waiting on Render URL + Vercel import; 38+ commits not pushed |
+| Fri 13 Nov | Render deploy live: `make smoke` passes over HTTPS + WSS; latest code (bow-tie fix) confirmed; CORS allows localhost:5173 | Add Vercel URL to Render `CORS_ORIGINS` after frontend deploy |
 |            |                                    |                  |
