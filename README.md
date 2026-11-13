@@ -4,14 +4,18 @@ Real-time geofencing and vehicle tracking, built for the MapUp Full-Stack Develo
 
 Draw zones on a map, register vehicles and stream their positions. The system works out every entry and exit with PostGIS, stores the full history, and pushes alerts to every open dashboard over WebSocket the moment a vehicle crosses into a restricted zone or matches an alert rule.
 
+## Video walkthrough
+
+**[Watch the video walkthrough](https://drive.google.com/drive/folders/1rKmFQsKIAVAbuuCzqZO55QCbDQ-6HaIu?usp=drive_link)**: demo, code walkthrough, gaps and roadmap.
+
 ## Live deployment
 
-| | URL |
-|---|---|
-| Web app (Vercel) | https://frontend-ivory-delta-38.vercel.app |
-| API (Render) | https://geofence-alert-system-ytl8.onrender.com (health: [`/healthz`](https://geofence-alert-system-ytl8.onrender.com/healthz)) |
-| WebSocket | `wss://geofence-alert-system-ytl8.onrender.com/ws/alerts` |
-| Docker image | [`sp4chi/mapup-geofencing-api`](https://hub.docker.com/r/sp4chi/mapup-geofencing-api) |
+|                  | URL                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Web app (Vercel) | https://frontend-ivory-delta-38.vercel.app                                                                                      |
+| API (Render)     | https://geofence-alert-system-ytl8.onrender.com (health: [`/healthz`](https://geofence-alert-system-ytl8.onrender.com/healthz)) |
+| WebSocket        | `wss://geofence-alert-system-ytl8.onrender.com/ws/alerts`                                                                       |
+| Docker image     | [`sp4chi/mapup-geofencing-api`](https://hub.docker.com/r/sp4chi/mapup-geofencing-api)                                           |
 
 The API runs on Render's free tier, which sleeps after 15 minutes without traffic: the first request after that can take about a minute while it wakes up.
 
@@ -25,19 +29,19 @@ Then open http://localhost:3000 (UI), with the API at http://localhost:8080. Eve
 
 ## Make commands
 
-The `Makefile` wraps the common tasks; `make help` lists all of them. The ones you'll use most:
+The `Makefile` wraps the common tasks; `make help` lists all of them :
 
-| Command | What it does |
-|---|---|
-| `make up` / `make down` | Start the whole stack (db + API + UI) in the background / stop it, keeping data |
-| `make logs` | Follow the API logs |
-| `make smoke` | End-to-end check of every endpoint, the error cases and live WebSocket alerts; `make smoke API_URL=https://…` runs it against a deployment |
-| `make simulate VEHICLE=veh_…` | Drive a vehicle across a geofence (add `GEOFENCE=geo_…` to pick one) to see entry/exit alerts live |
-| `make check` | Formatting, `go vet`, Go tests with the race detector, and the frontend build |
-| `make db` + `make run` | Run only the database in Docker and the API natively (reads `.env`) |
-| `make fe-dev` | Frontend dev server on http://localhost:5173 |
-| `make psql` | Open `psql` in the database container |
-| `make reset-db CONFIRM=1` | Delete all local data and start fresh |
+| Command                       | What it does                                                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `make up` / `make down`       | Start the whole stack (db + API + UI) in the background / stop it, keeping data                                                            |
+| `make logs`                   | Follow the API logs                                                                                                                        |
+| `make smoke`                  | End-to-end check of every endpoint, the error cases and live WebSocket alerts; `make smoke API_URL=https://…` runs it against a deployment |
+| `make simulate VEHICLE=veh_…` | Drive a vehicle across a geofence (add `GEOFENCE=geo_…` to pick one) to see entry/exit alerts live                                         |
+| `make check`                  | Formatting, `go vet`, Go tests with the race detector, and the frontend build                                                              |
+| `make db` + `make run`        | Run only the database in Docker and the API natively (reads `.env`)                                                                        |
+| `make fe-dev`                 | Frontend dev server on http://localhost:5173                                                                                               |
+| `make psql`                   | Open `psql` in the database container                                                                                                      |
+| `make reset-db CONFIRM=1`     | Delete all local data and start fresh                                                                                                      |
 
 ## Stack
 
