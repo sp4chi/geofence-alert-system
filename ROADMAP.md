@@ -54,16 +54,16 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 
 ## Phase 5 — Frontend
 
-- [ ] 🟥 Vite + React + TS + Tailwind; typed API client; `VITE_API_URL`/`VITE_WS_URL`
-- [ ] 🟥 Map: geofence polygons by category colour, vehicle markers
-- [ ] 🟥 Create geofence: draw on map **and** coordinate input; category filter list
-- [ ] 🟥 Vehicles: register form, list with current location + geofence status
-- [ ] 🟥 Location update: click map or inputs; show current geofences
-- [ ] 🟥 Alert rules: form (geofence, optional vehicle, event type) + list
-- [ ] 🟥 Live alerts: `useAlertsSocket` with backoff, toasts, feed, connection pill
-- [ ] 🟥 History: filters (vehicle, geofence, date range) + pagination
-- [ ] 🟥 Loading + error states everywhere; check at mobile width
-- [ ] 🟨 Memoized map layers; virtualized history table
+- [x] 🟥 Vite + React + TS + Tailwind; typed API client; `VITE_API_URL`/`VITE_WS_URL`
+- [x] 🟥 Map: geofence polygons by category colour, vehicle markers
+- [x] 🟥 Create geofence: draw on map **and** coordinate input; category filter list
+- [x] 🟥 Vehicles: register form, list with current location + geofence status
+- [x] 🟥 Location update: click map or inputs; show current geofences
+- [x] 🟥 Alert rules: form (geofence, optional vehicle, event type) + list
+- [x] 🟥 Live alerts: `useAlertsSocket` with backoff, toasts, feed, connection pill
+- [x] 🟥 History: filters (vehicle, geofence, date range) + pagination
+- [x] 🟥 Loading + error states everywhere; check at mobile width
+- [~] 🟨 Memoized map layers ✔; virtualized history table — not needed (server pagination, 25 rows/page)
 - ✅ Two browser tabs both show the toast when simulate.sh crosses a boundary
 
 ## Phase 6 — Ship + docs
@@ -126,4 +126,5 @@ Legend: 🟥 must-have · 🟨 nice-to-have / bonus · ⏱ time box · ✅ exit 
 | Fri 13 Nov | Phase 2: tracking service (lock → contain → diff → events → state), vehicle location GET, violation history; exit check + overlap/jump/late/concurrency verified | |
 | Fri 13 Nov | Makefile (AGENTS §4.1). Phase 3: alert rules API, rule matching + restricted default in the location tx, alert_events, WS hub with pumps/ping; 2 listeners verified, origin check, clean shutdown | Docker Hub user still needed for `IMAGE` |
 | Fri 13 Nov | Phase 4: cross-compiling multi-arch Dockerfile, image pushed to Docker Hub, simulate.sh + smoke.sh (`make simulate` / `make smoke`), render.yaml | Render deploy needs the user's dashboard login |
+| Fri 13 Nov | Phase 5: React app (map + draw, vehicles + click-to-locate, alert rules, live feed/toasts/pill, history with URL filters + pagination); verified in headless Chrome incl. 390 px; fixed bow-tie message bug in `geo` | Frontend not deployed yet (Phase 6) |
 |            |                                    |                  |
